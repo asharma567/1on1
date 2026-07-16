@@ -1,0 +1,4 @@
+interface:
+  display_name: "1on1 Session Bookend"
+  short_description: "Close a Codex session with commit, eval, and memory"
+  default_prompt: "Use $1on1 to close out this Codex session."
