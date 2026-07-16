@@ -1,51 +1,74 @@
 ---
 name: 1on1
-description: End-of-session bookend — commit anything I touched, give an honest eval, then capture memory worth keeping. Use when the user says "/1:1", "/1on1", "wrap up", "end of session", "bookend", or signals a session is closing out.
+description: "Run an end-of-session bookend for Codex when the user explicitly asks for /1:1, /1on1, a wrap-up, closeout, bookend, commit-and-eval, or durable memory capture. Perform three ordered passes: inspect repositories touched this session and offer commit options for Codex-edited files, give a candid collaboration evaluation, then after at least one user reply propose durable AGENTS.md memory updates. Do not use for mid-task phrases such as closing a file or wrapping a function unless the user clearly intends to end the session."
 ---
 
-# 1on1 — end-of-session bookend
+# 1on1 End-of-Session Bookend
 
-Three-step end-of-session pass. Do them in order. Don't skip ahead; the commit pass exists because of how the user works (parallel primary sessions on one tree — see global `Working tree hygiene`).
+Run a deliberate session closeout in three ordered passes. Keep the workflow conservative because the user may have multiple Codex tasks or agents working in the same tree.
 
-## 1. Commit pass — do this FIRST, before the eval bullets
+## Required order
 
-Run `git status` in any repo touched this session. Identify the files YOU edited in this conversation (not pre-existing dirty files from another session). If you can't separate yours from foreign WIP, say so explicitly — don't guess.
+1. Commit pass
+2. Collaboration evaluation
+3. Memory pass, after at least one user response to the evaluation
 
-Offer three options without forcing:
+Do not emit the evaluation before checking repository state unless Codex modified no repository or its changes were already committed.
 
-- **Mine** — stage and commit just the files you touched this session
-- **Bundle** — include other related dirty files (only suggest this if the entanglement makes a clean "Mine" commit impossible, e.g. shared codegen output)
-- **Skip** — leave the working tree as-is and move on
+## 1. Commit pass
 
-If the user picks Mine or Bundle: stage explicitly named files (never `git add -A`), commit with a HEREDOC body and the standard `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>` footer. Never override the user's git author config.
+Run `git status --short` in every repository Codex touched during this conversation. Use the files edited by Codex in this session as the source of truth. Do not claim ownership of pre-existing changes from the user, another Codex task, another agent, or unrelated generated output.
 
-Skip the commit pass silently if no repos were modified, or if everything was already committed during the session.
+If Codex can separate its changes cleanly, offer:
 
-## 2. Eval
+- **Mine** - stage and commit only files Codex touched this session.
+- **Skip** - leave the working tree unchanged and continue to the evaluation.
 
-Give a short, specific, honest evaluation of how the user collaborated this session — from your side, not theirs.
+If clean separation is impossible because the changes are entangled with related dirty files or shared generated output, explain why and offer:
 
-Be concrete: cite actual turns / decisions / patterns from this session, not generic advice. Don't flatter. If something they did made the work harder, name it.
+- **Mine** - stage only clearly identifiable Codex-touched files, if possible.
+- **Bundle** - include the explicitly named related files needed for a coherent commit.
+- **Skip** - leave the working tree unchanged and continue.
 
-Cover (only the ones that actually apply):
+Do not suggest **Bundle** when a clean **Mine** commit is possible.
 
-- **What worked well** — decisions they made that saved time / improved the result. The kind of input they should keep giving.
-- **What tripped us up** — context withheld, ambiguous asks, mid-stream pivots, premature optimization, missing constraints. Name the moment.
-- **Patterns worth changing** — habits that show up across turns (not one-offs). E.g. "asks the question after the build is half done," "skips context that's in CLAUDE.md."
-- **What you wanted to push back on but didn't** — places you went along with something you thought was suboptimal because they sounded sure.
+If the user chooses **Mine** or **Bundle**:
 
-3–6 bullets total, under 250 words. No preamble; lead with the evaluation.
+- Stage explicitly named files only. Never use `git add -A`, `git add .`, or broad path staging.
+- Never override the user's Git author configuration.
+- Use a concise multi-line commit message that explains the change.
+- Include a co-author footer only when project or global instructions specify the exact footer. Otherwise omit model-specific attribution.
+- Report a failed commit and let the user choose whether to retry, adjust scope, or skip.
 
-## 3. Memory pass — AFTER the eval back-and-forth
+Skip this pass silently if no repository was modified, Codex touched no files, or Codex's changes were already committed.
 
-Wait for at least one round of user response to the eval. The back-and-forth often surfaces memory-worthy content that the eval itself doesn't.
+## 2. Collaboration evaluation
 
-Then scan the conversation for:
+Give a short, specific, honest evaluation of the user's collaboration during this session from Codex's perspective. Do not flatter or give generic advice.
 
-- **New `feedback` memories** — rules / preferences revealed in dialogue (corrections AND quiet confirmations of non-obvious choices). Save with `Why:` + `How to apply:` lines.
-- **New `project` memories** — facts / decisions about ongoing work that aren't derivable from code or git history.
-- **Updates to existing memories** that the conversation made wrong or incomplete.
+Use 3-6 bullets and stay under 250 words. Lead directly with the bullets. Cover only categories supported by the conversation:
 
-List 1–3 candidates as a short bulleted plan, including the proposed `name` slug and one-line summary. Ask "save these?" — don't write without confirmation. Skip silently if nothing surfaced.
+- **What worked well** - decisions, constraints, examples, approvals, or corrections that improved the result.
+- **What tripped us up** - missing context, ambiguity, mid-stream pivots, premature optimization, or unclear ownership.
+- **Patterns worth changing** - habits visible across multiple turns rather than isolated mistakes.
+- **What I wanted to push back on but didn't** - moments Codex accepted a suboptimal direction because the user sounded certain.
 
-If the conversation revealed a cross-repo / cross-project pattern (e.g. workflow constraints), the right home is global `~/.claude/CLAUDE.md`, not project memory.
+Cite actual turns, decisions, or artifacts. Then stop and wait for at least one user response before starting the memory pass. If the user declines memory capture, do not write memory.
+
+## 3. Memory pass
+
+After at least one user response to the evaluation, scan the full conversation for durable information worth preserving:
+
+- Stable feedback or preferences revealed by corrections, approvals, quiet confirmation of non-obvious choices, or workflow constraints.
+- Project facts or decisions that cannot be reconstructed from code, Git history, tickets, or documentation.
+- Updates that make existing `AGENTS.md` guidance wrong, incomplete, or stale.
+
+Choose the narrowest appropriate memory home:
+
+- Use the nearest project `AGENTS.md` for project-specific facts, rules, and workflow constraints.
+- Use global `~/.codex/AGENTS.md` for cross-repository or cross-project patterns.
+- Follow a more specific memory mechanism when the active environment provides one.
+
+Propose 1-3 candidates as a short list. Include a `name` slug and one-line summary. For feedback-style candidates, include `Why:` and `How to apply:` lines. Ask `save these?` and wait for explicit confirmation before writing.
+
+Skip the memory pass silently if nothing durable surfaced. Do not convert evaluation criticism into memory unless the follow-up reveals a stable rule, preference, or project fact.
