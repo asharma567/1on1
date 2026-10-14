@@ -1,6 +1,6 @@
 ---
 name: 1on1
-description: "Run an end-of-session bookend for Codex when the user explicitly asks for /1:1, /1on1, a wrap-up, closeout, bookend, commit-and-eval, or durable memory capture. Perform three ordered passes: inspect repositories touched this session and offer commit options for Codex-edited files, give a candid collaboration evaluation, then after at least one user reply propose durable AGENTS.md memory updates. Do not use for mid-task phrases such as closing a file or wrapping a function unless the user clearly intends to end the session."
+description: "Close a Codex session when Ajay invokes /1:1 or /1on1, requests a wrap-up or closeout, or says he is done for the day. Commit and push identifiable session work by default in private repositories, verify GitHub attribution and branch eligibility, then evaluate collaboration and propose memory after a reply. Do not use for mid-task requests."
 ---
 
 # 1on1 End-of-Session Bookend
@@ -9,38 +9,35 @@ Run a deliberate session closeout in three ordered passes. Keep the workflow con
 
 ## Required order
 
-1. Commit pass
+1. Commit and push pass
 2. Collaboration evaluation
 3. Memory pass, after at least one user response to the evaluation
 
-Do not emit the evaluation before checking repository state unless Codex modified no repository or its changes were already committed.
+Do not emit the evaluation before checking repository state and push status unless Codex touched no repository.
 
-## 1. Commit pass
+## 1. Commit and push pass
 
-Run `git status --short` in every repository Codex touched during this conversation. Use the files edited by Codex in this session as the source of truth. Do not claim ownership of pre-existing changes from the user, another Codex task, another agent, or unrelated generated output.
+Run at a requested session closeout, including "done for the day", without waiting for a clock schedule. This skill cannot detect quitting the app or execute while the computer is off. Ordinary task completion does not end the whole session.
 
-If Codex can separate its changes cleanly, offer:
+Inspect every repository touched in this conversation, even when session changes are already committed: they may still be unpushed. Use the files actually edited this session as the ownership boundary; preserve pre-existing and other sessions' changes.
 
-- **Mine** - stage and commit only files Codex touched this session.
-- **Skip** - leave the working tree unchanged and continue to the evaluation.
+Before committing, check the effective Git author email. Ajay's GitHub profile is `asharma567`; its GitHub noreply address is `3334296+asharma567@users.noreply.github.com`. Accept another email only if GitHub links it to that account. `ajay@datashop.ai` credited `datashopai` in the October 2026 audit; verify its current association before using it. Do not silently override author configuration or rewrite history; report mismatches for repair.
 
-If clean separation is impossible because the changes are entangled with related dirty files or shared generated output, explain why and offer:
+Ajay authorizes this closeout workflow to commit and push clearly identifiable session work by default in private repositories:
 
-- **Mine** - stage only clearly identifiable Codex-touched files, if possible.
-- **Bundle** - include the explicitly named related files needed for a coherent commit.
-- **Skip** - leave the working tree unchanged and continue.
+- Stage explicitly named session files only. Never use broad staging, empty commits, fabricated work, or modified dates to fill the graph.
+- Use a concise multi-line commit message explaining the change. Include a co-author footer only if applicable instructions specify the exact footer.
+- Verify the intended origin, upstream, and remote state. Integrate remote changes only when ownership and working-tree state are safe; abort a conflicting rebase and report it. Never force-push.
+- Push the current branch to its existing upstream, or establish the corresponding branch on the verified origin if needed. Respect any instruction to skip commits or pushes.
+- For public repositories, make changes concrete and reviewable, then ask for explicit publishing permission unless this session already authorizes the particular push.
 
-Do not suggest **Bundle** when a clean **Mine** commit is possible.
+If session work is entangled with foreign changes, offer Mine / Bundle / Skip with the files named. If an operation fails, report the specific blocker; do not claim completion.
 
-If the user chooses **Mine** or **Bundle**:
+After pushing, verify the remote tip and the commit's GitHub author login. Check the actual default branch and fork status. Feature-branch pushes alone do not earn commit contribution credit: flag the review/merge needed, but do not merge or change defaults just to increase counts. Private work is publicly counted only when anonymized private contributions are enabled; never make private repositories public for this purpose. Allow up to 24 hours for graph updates.
 
-- Stage explicitly named files only. Never use `git add -A`, `git add .`, or broad path staging.
-- Never override the user's Git author configuration.
-- Use a concise multi-line commit message that explains the change.
-- Include a co-author footer only when project or global instructions specify the exact footer. Otherwise omit model-specific attribution.
-- Report a failed commit and let the user choose whether to retry, adjust scope, or skip.
+When available, `/Users/ajay/job_search/tools/github_contribution_check.py --live <repo-path>...` provides a read-only identity, remote-tip, and branch check. Without `--live`, upstream information is cached and does not prove a successful push. Verify GitHub commit author attribution separately.
 
-Skip this pass silently if no repository was modified, Codex touched no files, or Codex's changes were already committed.
+Finish with a short receipt per repository: commit SHA, push status, attributed GitHub account, and eligible-branch status. Say when nothing changed. Skip committing already-committed work, but still check whether it was pushed. Only claim the graph updated when actually verified.
 
 ## 2. Collaboration evaluation
 
